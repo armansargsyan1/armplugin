@@ -219,15 +219,21 @@ class Armplugin {
 
 	//------------------------------------------------------------------------------my changes
 	public function register() {
+		if ( ! session_id() ) {
+			session_start();
+		}
+
 		add_shortcode('arm_register_short', [ $this, 'arm_register_short' ]);
         add_shortcode('arm_users_table_short', [$this, 'arm_users_table_short']);
         add_shortcode('arm_edit_users_short',[$this, 'arm_edit_users_short']);
+        add_shortcode('arm_js_register_short',[$this , 'arm_js_register_short']);
 
         $this->loader->add_action('admin_post_submit_btn' , $this, 'add_db');
         $this->loader->add_action('admin_post_edit' , $this, 'edit_users_func');
-        if ( ! session_id() ) {
-			session_start();
-		}
+
+        $class_front = new Armplugin_Public($this->get_plugin_name(), $this->get_version());
+		$this->loader->add_action( 'wp_ajax_front_action', $this , 'js_add_db' );
+
     }
 
 
@@ -493,5 +499,56 @@ class Armplugin {
 		    $_SESSION['armplugin']['error']  ="name should be more than 3 symbol , surname 5, email 5";
 	    }
 	    wp_safe_redirect( site_url( 'users' ) );
+    }
+
+
+	/**
+	 * for generating a registration form
+	 *
+	 * @return false|string
+	 */
+	public function arm_js_register_short() {
+		ob_start();
+		?>
+        <form id="form" enctype="multipart/form-data">
+            <div class="container">
+                <div class="col">
+                    <div class="row w-100 p-0">
+                        <label for="js_name">Name</label>
+                        <input name="name" id="js_name" class="form-control">
+                    </div>
+                    <div class="row w-100 p-0">
+                        <label for="js_password">password</label>
+                        <input name="password" id="js_password" class="form-control">
+                    </div>
+                    <div class="row w-100 p-0">
+                        <label for="js_email">Email</label>
+                        <input name="email" id="js_email" class="form-control">
+                    </div>
+                    <div class="row w-100 p-0">
+                        <button name="upload_file" id="js_submit_btn" class="btn btn-primary w-100">Register</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+		<?php
+		return ob_get_clean();
+	}
+
+    public function js_add_db(){
+	    $name     = sanitize_text_field( $_POST['name'] );
+	    $password = sanitize_text_field( $_POST['password'] );
+	    $email    = sanitize_email( $_POST['email'] );
+
+	    if ( strlen( $name ) > 3 && strlen( $password ) > 5 && strlen( $email ) > 5 ) {
+		    $last_id = wp_create_user( $name, $password, $email );
+		    $_SESSION['armplugin']['success'] = "you are registered";
+		    $_SESSION['armplugin']['error'] = null;
+	    } else {
+		    $_SESSION['armplugin']['error'] = "name should be more than 3 symbol, password 5, email 5";
+		    $_SESSION['armplugin']['success'] = null;
+	    }
+        echo $last_id;
+	    wp_safe_redirect(site_url('users'));
     }
 }

@@ -72,7 +72,7 @@ class Armplugin_Public {
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
-
+		wp_enqueue_style( 'bootstrap', 'https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css' );
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/armplugin-public.css', array(), $this->version, 'all' );
 	}
 
@@ -96,7 +96,7 @@ class Armplugin_Public {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/armplugin-public.js', array( 'jquery' ), $this->version, false );
-
+		wp_localize_script( $this->plugin_name, 'from_back', ['ajaxurl' => admin_url( 'admin-ajax.php' )] );
 	}
 
 }
